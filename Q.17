@@ -1,0 +1,19 @@
+WITH SalaryRanked AS (
+    SELECT
+        id,
+        salary,
+        salary_month,
+        ROW_NUMBER() OVER (PARTITION BY id ORDER BY salary_month DESC) AS row_num
+    FROM Employee
+)
+SELECT
+    s.id,
+    s.salary_month,
+    SUM(sr.salary) OVER (PARTITION BY s.id ORDER BY sr.salary_month ROWS BETWEEN 2 PRECEDING AND 1 PRECEDING) AS cumulative_sum
+FROM (
+    SELECT DISTINCT id, salary_month
+    FROM SalaryRanked
+    WHERE row_num > 1
+) s
+JOIN SalaryRanked sr ON s.id = sr.id AND s.salary_month = sr.salary_month
+ORDER BY s.id ASC, s.salary_month DESC;
